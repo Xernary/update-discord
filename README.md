@@ -1,6 +1,6 @@
 # Description
 
-A simple C script that updates the build_info.json discord file to the specified version.
+A simple C script that updates the build_info.json discord file to the specified version so that discord can update itself.
 
 
 # Installation
