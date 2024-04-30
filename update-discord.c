@@ -4,26 +4,28 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define PATH "/home/nick/code/update-discord/test"//"/opt/discord/resources/build_info.json"
+#define PATH "/opt/discord/resources/build_info.json"
 #define BUFF_SIZE 512
 #define PATTERN "\"version\": \""
 #define PATTERN_SIZE 12
 
 void increase_version(const int fd, char* const buff, char* const version){
 
-  char* version_string = malloc(sizeof(char) * 5);
+  char* const version_string = malloc(sizeof(char) * 5);
   memset(version_string, 0, 5);
 
   int dots = 0;
   int end = -1;
+
   for(int i = 0; i < strlen(version) - 1; i++){
-    if(version[i] == '"') break;
-    if(dots == 2) {end = i; strcat(version_string, &version[i]);}
-    if(version[i] == '.') dots++;
+    char ch = version[i];
+    if(ch == '"') break;
+    if(dots == 2) {end = i; strncpy(&version_string[strlen(version_string)], &ch, 1);}
+    if(ch == '.') dots++;
   }
 
+
   int old_version_number = atoi(version_string);
-  printf("New version: %d\n", old_version_number+1);
 
   char* new_version_string;
   sprintf(new_version_string, "%d", old_version_number+1);
@@ -31,11 +33,15 @@ void increase_version(const int fd, char* const buff, char* const version){
   char* output = malloc(sizeof(char) * BUFF_SIZE);
   memset(output, 0, BUFF_SIZE);
   strncpy(output, buff, strlen(buff) - strlen(version) + end-1);
+  printf("\n%s\n", output);
   strcat(output, new_version_string);
-  strcat(output, &buff[strlen(buff)-2- strlen(version) + end +strlen(version_string)]);
+  printf("\n%s\n", output);
+  strcat(output, &buff[strlen(buff)-1- strlen(version) + end +strlen(version_string)]);
+
+  printf("\noutput = %s\n", output);
 
   lseek(fd, 0, SEEK_SET);
-  write(fd, output, BUFF_SIZE-1);
+  write(fd, output, strlen(output));
 
   return;
 }
