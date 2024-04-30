@@ -1,3 +1,8 @@
+# Description
+
+A simple C script that updates the build_info.json discord file to the specified version.
+
+
 # Installation
 
 After cloning the repository, add the executable to path with:
