@@ -3,11 +3,41 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define PATH "/opt/discord/resources/build_info.json"
 #define BUFF_SIZE 512
 #define PATTERN "\"version\": \""
 #define PATTERN_SIZE 12
+#define COMMAND "sudo chmod a+w "
+
+int open_file(){
+
+  int fd;
+
+  if((fd = open(PATH, O_RDWR)) == -1){
+    if(errno != EACCES){
+      perror("opening file");
+      exit(1);
+    }
+
+    const int command_size = sizeof(char) * sizeof(PATH) + sizeof(char) * sizeof(COMMAND);
+
+    char* command = malloc(command_size);
+    memset(command, 0, command_size);
+    strcpy(command, COMMAND);
+    strcat(command, PATH);
+    printf("command = %s\n", command);
+    system(command);
+
+    if((fd = open(PATH, O_RDWR)) == -1){
+       perror("opening file");
+       exit(1);
+    }
+  }
+
+  return fd;
+}
 
 void increase_version(const int fd, char* const buff, char* const version){
 
@@ -38,19 +68,19 @@ void increase_version(const int fd, char* const buff, char* const version){
   printf("\n%s\n", output);
   strcat(output, &buff[strlen(buff)-1- strlen(version) + end +strlen(version_string)]);
 
-  printf("\noutput = %s\n", output);
-
   lseek(fd, 0, SEEK_SET);
   write(fd, output, strlen(output));
+
+  free(version_string);
 
   return;
 }
 
 int main(){
 
-  const int fd = open(PATH, O_RDWR); 
-  char buff[BUFF_SIZE];
+  int fd = open_file();
 
+  char buff[BUFF_SIZE];
   int n = read(fd, buff, BUFF_SIZE-1);
   buff[n] = '\0';
 
@@ -59,8 +89,6 @@ int main(){
     perror("version not found");
     exit(1);
   }
-
-  printf("WORKED\n");
 
   increase_version(fd, buff, version+PATTERN_SIZE); 
 
